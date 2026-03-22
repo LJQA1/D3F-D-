@@ -1,0 +1,10 @@
+# dataset path
+train: C:/LJQ/DATA/Tinyperson/Tinyperson/images/train
+val: C:/LJQ/DATA/Tinyperson/Tinyperson/images/val
+test: C:/LJQ/DATA/Tinyperson/Tinyperson/images/test
+
+# number of classes
+nc: 2
+
+# class names
+names: ['earth_person', 'sea_person']

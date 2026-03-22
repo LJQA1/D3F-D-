@@ -1,0 +1,56 @@
+
+
+# Parameters
+nc: 8 # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolo12n.yaml' will call yolo12.yaml with scale 'n'
+  # [depth, width, max_channels]
+  #n: [0.50, 0.25, 1024] # summary: 272 layers, 2,602,288 parameters, 2,602,272 gradients, 6.7 GFLOPs
+  s: [0.50, 0.50, 1024] # summary: 272 layers, 9,284,096 parameters, 9,284,080 gradients, 21.7 GFLOPs
+  #m: [0.50, 1.00, 512] # summary: 292 layers, 20,199,168 parameters, 20,199,152 gradients, 68.1 GFLOPs
+  #l: [1.00, 1.00, 512] # summary: 488 layers, 26,450,784 parameters, 26,450,768 gradients, 89.7 GFLOPs
+  #x: [1.00, 1.50, 512] # summary: 488 layers, 59,210,784 parameters, 59,210,768 gradients, 200.3 GFLOPs
+
+# YOLO12n backbone
+backbone:
+  # [from, repeats, module, args]  #Original=DBDown,CombinedModule=DFMS
+  - [-1, 1, Original, [64]]                 # 0
+  - [-1, 1, Original, [128]]                # 1
+  - [-1, 2, C3k2, [256, False, 0.25]]       # 2
+  - [-1, 1, CombinedModule, [256]]          # 3
+  - [-1, 1, Conv, [256, 3, 2]]              # 4
+  - [-1, 2, C3k2, [512, False, 0.25]]       # 5
+  - [-1, 1, Conv, [512, 3, 2]]              # 6
+  - [-1, 4, A2C2f, [512, True, 4]]          # 7
+
+# YOLO12n head
+head:
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]             # 8
+  - [[-1, 5], 1, Concat, [1]]                              # 9
+  - [-1, 2, A2C2f, [512, False, -1]]                       # 10
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]             # 11
+  - [[-1, 2, 3], 1, Concat, [1]]                           # 12
+  - [-1, 2, A2C2f, [128, False, -1]]                       # 13
+
+#阶段二
+  - [-1, 1, Conv, [256, 3, 2] ]                           #14
+  - [-1, 2, A2C2f, [512, False, -1]]                      #15
+
+  - [[-1,5, 10], 1, Concat, [1]]                          #16
+  - [-1, 2, A2C2f, [256, False, -1]]                      #17
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]            #18
+  - [[-1, 2, 13], 1, Concat, [1]]                         #19
+  - [-1, 2, A2C2f, [128, False, -1]]                      #20
+
+#阶段三
+  - [ -1, 1, Conv, [ 128, 3, 2 ] ]                         # 21
+  - [ [ -1, 5, 17], 1, Concat, [ 1 ] ]                     # 22
+  - [ -1, 2, A2C2f, [ 256, False, -1 ] ]                   # 23
+
+  - [-1, 1, Conv, [256, 3, 2]]                             # 24
+  - [[-1, 7], 1, Concat, [1]]                              # 25
+  - [-1, 2, C3k2, [512, True]]                             # 26
+
+  - [[20, 23, 26], 1, Detect, [nc]]

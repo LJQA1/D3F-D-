@@ -1,0 +1,13 @@
+# dataset path
+
+train: C:\LJQ\DATA\UAVDT\images\train
+val: C:\LJQ\DATA\UAVDT\images\val
+test: D:/Files/Projects/PycharmProjects/ultralytics-main/ultralytics-main/dataset/UAVDT/images/val
+# number of classes
+nc: 3
+
+# class names
+names:
+  0: Car
+  1: Truck
+  2: Bus

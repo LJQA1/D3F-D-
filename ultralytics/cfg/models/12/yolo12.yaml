@@ -1,0 +1,228 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
+# YOLO12 object detection model with P3/8 - P5/32 outputs
+# Model docs: https://docs.ultralytics.com/models/yolo12
+# Task docs: https://docs.ultralytics.com/tasks/detect
+
+# Parameters
+nc: 8 # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolo12n.yaml' will call yolo12.yaml with scale 'n'
+  # [depth, width, max_channels]
+  #n: [0.50, 0.25, 1024] # summary: 272 layers, 2,602,288 parameters, 2,602,272 gradients, 6.7 GFLOPs
+  #s: [0.50, 0.50, 1024] # summary: 272 layers, 9,284,096 parameters, 9,284,080 gradients, 21.7 GFLOPs
+  m: [0.50, 1.00, 512] # summary: 292 layers, 20,199,168 parameters, 20,199,152 gradients, 68.1 GFLOPs
+  #l: [1.00, 1.00, 512] # summary: 488 layers, 26,450,784 parameters, 26,450,768 gradients, 89.7 GFLOPs
+  #x: [1.00, 1.50, 512] # summary: 488 layers, 59,210,784 parameters, 59,210,768 gradients, 200.3 GFLOPs
+
+anchors:
+  - [6.05,9.84,9.12,22.30,16.64,40.31]   # P3
+  - [22.88,19.72,29.90,67.15,43.23,37.04]  # P4
+  - [49.01,110.25,80.43,65.91,113.74,164.37]  # P5
+
+# YOLO12n backbone
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2  // 4 16 320 320
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4  // 4 32 160 160
+  - [-1, 2, C3k2, [256, False, 0.25]] #  // 4 64 160 160
+  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8  // 4 64 80 80
+  - [-1, 2, C3k2, [512, False, 0.25]]  # // 4 128 80 80
+  - [-1, 1, Conv, [512, 3, 2]] # 5-P4/16  // 4 128 40 40
+  - [-1, 4, A2C2f, [512, True, 4]]  # // 4 128 40 40
+  - [-1, 1, Conv, [1024, 3, 2]] # 7-P5/32  // 4 256 20 20
+  - [-1, 4, A2C2f, [1024, True, 1]] # 8  // 4 256 20 20
+
+# YOLO12n head
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # // 4 256 40 40
+  - [[-1, 6], 1, Concat, [1]] # cat backbone P4 // 4 384 40 40
+  - [-1, 2, A2C2f, [512, False, -1]] # 11  // 4 128 40 40
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # // 4 128 80 80
+  - [[-1, 4], 1, Concat, [1]] # cat backbone P3  // 4 256 80 80
+  - [-1, 2, A2C2f, [256, False, -1]] # 14  // 4 64 80 80
+
+  - [-1, 1, Conv, [256, 3, 2]] # // 4 64 40 40
+  - [[-1, 11], 1, Concat, [1]] # cat head P4  // 4 192 40 40
+  - [-1, 2, A2C2f, [512, False, -1]] # 17  // 4 128 40 40
+
+  - [-1, 1, Conv, [512, 3, 2]] #  // 4 128 20 20
+  - [[-1, 8], 1, Concat, [1]] # cat head P5  // 4 384 20 20
+  - [-1, 2, C3k2, [1024, True]] # 20 (P5/32-large) // 4 256 20 20
+
+  - [[14, 17, 20], 1, Detect, [nc]] # Detect(P3, P4, P5)
+
+
+
+
+
+
+## YOLOv12 🚀, AGPL-3.0 license
+## YOLOv12 object detection model with P3-P5 outputs. For Usage examples see https://docs.ultralytics.com/tasks/detect
+#
+## Parameters
+#nc: 80 # number of classes
+#scales: # model compound scaling constants, i.e. 'model=yolov12n.yaml' will call yolov12.yaml with scale 'n'
+#  # [depth, width, max_channels]
+#  n: [0.50, 0.25, 1024] # summary: 465 layers, 2,603,056 parameters, 2,603,040 gradients, 6.7 GFLOPs
+#  s: [0.50, 0.50, 1024] # summary: 465 layers, 9,285,632 parameters, 9,285,616 gradients, 21.7 GFLOPs
+#  m: [0.50, 1.00, 512] # summary: 501 layers, 20,201,216 parameters, 20,201,200 gradients, 68.1 GFLOPs
+#  l: [1.00, 1.00, 512] # summary: 831 layers, 26,454,880 parameters, 26,454,864 gradients, 89.7 GFLOPs
+#  x: [1.00, 1.50, 512] # summary: 831 layers, 59,216,928 parameters, 59,216,912 gradients, 200.3 GFLOPs
+#
+## YOLO12n backbone
+#backbone:
+#  # [from, repeats, module, args]
+#  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2  // 4 16 320 320
+#  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4  // 4 32 160 160
+#  - [-1, 2, C3k2, [256, False, 0.25]] #  // 4 64 160 160
+#  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8  // 4 64 80 80
+#  - [-1, 2, C3k2, [512, False, 0.25]]  # // 4 128 80 80
+#  - [-1, 1, Conv, [512, 3, 2]] # 5-P4/16  // 4 128 40 40
+#  - [-1, 4, A2C2f, [512, True, 4]]  # // 4 128 40 40
+#  - [-1, 1, Conv, [1024, 3, 2]] # 7-P5/32  // 4 256 20 20
+#  - [-1, 4, A2C2f, [1024, True, 1]] # 8  // 4 256 20 20
+#
+## YOLO12n head
+#head:
+#  - [6, 1, AVG, []]   # // 4 128 20 20                                      9
+#  - [[-1, 8], 1, Concat, [1]] #  // 4 384 20 20                             10
+#  - [-1, 1, RepHMS, [512, 2, 1, 3, 9]] #  // 4 128 20 20                    11
+#
+#  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] #  // 4 128 40 40            12
+#  - [8, 1, nn.Upsample, [None, 2, "nearest"]] #  // 4 256 40 40             13
+#  - [4, 1, AVG, []] #  // 4 128 40 40                                       14
+#  - [[-1, 6, -2, -3], 1, Concat, [1]] #   // 4 640 40 40                    15
+#  - [-1, 1, RepHMS, [384, 2, 1, 3, 7]] #  // 4 96 40 40                     16
+#
+#  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  #  // 4 96 80 80            17
+#  - [6, 1, nn.Upsample, [None, 2, "nearest"]]  # // 4 128 80 80             18
+#  - [2, 1, AVG, []]  #  // 4 32 80 80                                       19
+#  - [[-1, 4, -2, -3], 1, Concat, [1]]  # // 4 384 80 80                     20
+#  - [-1, 1, RepHMS, [384, 2, 1, 3, 5]]  #  // 4 96 80  80                   21
+#
+#  - [16, 1, nn.Upsample, [None, 2, "nearest"]]  # // 4 96 80 80             22
+#  - [[-1, -2], 1, Concat, [1]]  # // 4 192 80 80                            23
+#  - [-1, 1, RepHMS, [384, 2, 1, 3, 5]]  #  // 4 96 80 80                    24
+#
+#  - [-1, 1, Conv, [384, 3, 2]]  #  // 4 96 40 40                            25
+#  - [21, 1, AVG, []]  # // 4 96 40  40                                      26
+#  - [11, 1, nn.Upsample, [None, 2, "nearest"]]  #// 4 128 40  40            29
+#  - [[-2, -1, 16, -3], 1, Concat, [1]]  #  #// 4 416 40  40                 28
+#  - [-1, 1, RepHMS, [384, 2, 1, 3, 7]]  #  // 4 96 40 40                    29
+#
+#  - [-1, 1, Conv, [384, 3, 2]]  #                                           30
+#  - [16, 1, AVG, []]  #                                                     31
+#  - [[-2, -1, 11], 1, Concat, [1]]  #                                       32
+#  - [-1, 1, RepHMS, [512, 2, 1, 3, 9]]  #                                   33
+#
+#  - [[24, 29, 33], 1, Detect, [nc]] # Detect(P3, P4, P5)
+
+
+
+## Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+#
+## YOLO12 object detection model with P3/8 - P5/32 outputs
+## Model docs: https://docs.ultralytics.com/models/yolo12
+## Task docs: https://docs.ultralytics.com/tasks/detect
+#
+## Parameters
+#nc: 10 # number of classes
+#scales: # model compound scaling constants, i.e. 'model=yolo12n.yaml' will call yolo12.yaml with scale 'n'
+#  # [depth, width, max_channels]
+#  #n: [0.50, 0.25, 1024] # summary: 272 layers, 2,602,288 parameters, 2,602,272 gradients, 6.7 GFLOPs
+#  s: [0.50, 0.50, 1024] # summary: 272 layers, 9,284,096 parameters, 9,284,080 gradients, 21.7 GFLOPs
+#  #m: [0.50, 1.00, 512] # summary: 292 layers, 20,199,168 parameters, 20,199,152 gradients, 68.1 GFLOPs
+#  #l: [1.00, 1.00, 512] # summary: 488 layers, 26,450,784 parameters, 26,450,768 gradients, 89.7 GFLOPs
+#  #x: [1.00, 1.50, 512] # summary: 488 layers, 59,210,784 parameters, 59,210,768 gradients, 200.3 GFLOPs
+#
+## YOLO12n backbone
+#backbone:   # 這是替換mfi
+#  # [from, repeats, module, args]
+#  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2  // 4 16 320 320
+#  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4  // 4 32 160 160
+#  - [-1, 2, C3k2, [256, False, 0.25]] #  // 4 64 160 160
+#  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8  // 4 64 80 80
+#  - [-1, 2, C3k2, [512, False, 0.25]]  # // 4 128 80 80
+#  - [-1, 1, Conv, [512, 3, 2]] # 5-P4/16  // 4 128 40 40
+#  - [-1, 4, A2C2f, [512, True, 4]]  # // 4 128 40 40
+#  - [-1, 1, Conv, [1024, 3, 2]] # 7-P5/32  // 4 256 20 20
+#  - [-1, 4, A2C2f, [1024, True, 1]] # 8  // 4 256 20 20
+#
+## YOLO12n head
+#head:
+#  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # // 4 256 40 40
+#  - [[-1, 6], 1, Concat, [1]] # cat backbone P4 // 4 384 40 40
+#  - [-1, 2, MFI, [512]]
+#
+#  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # // 4 128 80 80
+#  - [[-1, 4], 1, Concat, [1]] # cat backbone P3  // 4 256 80 80
+#  - [-1, 2, MFI, [256]]
+#
+#
+#  - [-1, 1, Conv, [256, 3, 2]] # // 4 64 40 40
+#  - [[-1, 11], 1, Concat, [1]] # cat head P4  // 4 192 40 40
+#  - [-1, 2, MFI, [512]]
+#
+#
+#  - [-1, 1, Conv, [512, 3, 2]] #  // 4 128 20 20
+#  - [[-1, 8], 1, Concat, [1]] # cat head P5  // 4 384 20 20
+#  - [-1, 2, MFI, [1024]]
+#
+#  - [[14, 17, 20], 1, Detect, [nc]] # Detect(P3, P4, P5)
+
+
+## Parameters
+#nc: 10 # number of classes
+#scales: # model compound scaling constants, i.e. 'model=yolo12n.yaml' will call yolo12.yaml with scale 'n'
+#  # [depth, width, max_channels]
+#  #n: [0.50, 0.25, 1024] # summary: 272 layers, 2,602,288 parameters, 2,602,272 gradients, 6.7 GFLOPs
+#  s: [0.50, 0.50, 1024] # summary: 272 layers, 9,284,096 parameters, 9,284,080 gradients, 21.7 GFLOPs
+#  #m: [0.50, 1.00, 512] # summary: 292 layers, 20,199,168 parameters, 20,199,152 gradients, 68.1 GFLOPs
+#  #l: [1.00, 1.00, 512] # summary: 488 layers, 26,450,784 parameters, 26,450,768 gradients, 89.7 GFLOPs
+#  #x: [1.00, 1.50, 512] # summary: 488 layers, 59,210,784 parameters, 59,210,768 gradients, 200.3 GFLOPs
+#
+## YOLO12n backbone 这是合并后的模块
+#backbone:
+#  # [from, repeats, module, args]
+#  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2  // 4 16 320 320
+#  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4  // 4 32 160 160
+#  - [-1, 2, C3k2, [256, False, 0.25]] #  // 4 64 160 160
+#  - [-1, 1, CombinedModule, [256]]
+#  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8  // 4 64 80 80
+#  - [-1, 2, C3k2, [512, False, 0.25]]  # // 4 128 80 80
+#  - [-1, 1, CombinedModule, [512]]
+#  - [-1, 1, Conv, [512, 3, 2]] # 5-P4/16  // 4 128 40 40
+#  - [-1, 4, A2C2f, [512, True, 4]]  # // 4 128 40 40
+#  - [-1, 1, Conv, [1024, 3, 2]] # 7-P5/32  // 4 256 20 20
+#  - [-1, 4, A2C2f, [1024, True, 1]] # 8  // 4 256 20 20
+#
+## YOLO12n head
+#head:
+#  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # // 4 256 40 40
+#  - [[-1, 8], 1, Concat, [1]] # cat backbone P4 // 4 384 40 40
+#  - [-1, 2, A2C2f, [512, False, -1]] # 11  // 4 128 40 40
+#
+#  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # // 4 128 80 80
+#  - [[-1, 6], 1, Concat, [1]] # cat backbone P3  // 4 256 80 80
+#  - [-1, 2, A2C2f, [256, False, -1]] # 14  // 4 64 80 80
+#
+#
+#  - [ -1, 1, nn.Upsample, [ None, 2, "nearest" ] ] # // 4 128 80 80
+#  - [ [ -1, 2 ], 1, Concat, [ 1 ] ] # cat backbone P3  // 4 256 80 80
+#  - [ -1, 2, A2C2f, [ 128, False, -1 ] ] # 14  // 4 64 80 80
+#
+#  - [ -1, 1, Conv, [ 256, 3, 2 ] ] # // 4 64 40 40
+#  - [ [ -1, 16 ], 1, Concat, [ 1 ] ] # cat head P4  // 4 192 40 40
+#  - [ -1, 2, A2C2f, [ 256, False, -1 ] ] # 17  // 4 128 40 40
+#
+#
+#  - [-1, 1, Conv, [256, 3, 2]] # // 4 64 40 40
+#  - [[-1, 13], 1, Concat, [1]] # cat head P4  // 4 192 40 40
+#  - [-1, 2, A2C2f, [512, False, -1]] # 17  // 4 128 40 40
+#
+#  - [-1, 1, Conv, [512, 3, 2]] #  // 4 128 20 20
+#  - [[-1, 10], 1, Concat, [1]] # cat head P5  // 4 384 20 20
+#  - [-1, 2, C3k2, [1024, True]] # 20 (P5/32-large) // 4 256 20 20
+#
+#  - [[19, 22, 25, 28], 1, Detect, [nc]] # Detect(P3, P4, P5)
