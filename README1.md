@@ -47,7 +47,9 @@ Validation Commands:
 The validation process automatically outputs evaluation metrics such as mAP@0.5:0.95, and visual results and metric files are saved to the results/ directory.
 
 
-##6. DOI & Permanent Archive
+## 6. DOI & Permanent Archive
+
+## 6. DOI & Permanent Archive
 Repository DOI:10.5281/zenodo.19162854
 
 ## 7. Contact
