@@ -47,17 +47,6 @@ Validation Commands:
 The validation process automatically outputs evaluation metrics such as mAP@0.5:0.95, and visual results and metric files are saved to the results/ directory.
 
 
-## 6. Citation
-This code corresponds to the paper under review in The Visual Computer. Please cite our work if you use this code in your research:
-
-@article{author2026d3fdet,
-  title={D3F-Det: Progressive Fine-Grained Feature Refinement and Reuse for Robust Small Object Detection in Aerial Imagery},
-  author={[Full Author List]},
-  journal={The Visual Computer},
-  year={2026},
-  note={Under Review}
-}
-
 
 ## 7. Contact
 If you encounter any problems during code reproduction, please contact us via email: [Your Contact Email]
